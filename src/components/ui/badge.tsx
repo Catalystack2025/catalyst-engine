@@ -8,22 +8,60 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
+        default:
+          "border-transparent bg-primary text-primary-foreground shadow-sm",
+        secondary: "border-transparent bg-secondary text-secondary-foreground",
+        destructive:
+          "border-transparent bg-destructive text-destructive-foreground shadow-sm",
         outline: "text-foreground",
+        success:
+          "border-transparent bg-success/10 text-success border-success/20",
+        warning:
+          "border-transparent bg-warning/10 text-warning border-warning/20",
+        info: "border-transparent bg-info/10 text-info border-info/20",
+        muted: "border-transparent bg-muted text-muted-foreground",
+        pending:
+          "border-transparent bg-warning/10 text-warning border-warning/20",
+        active:
+          "border-transparent bg-success/10 text-success border-success/20",
+        draft: "border-transparent bg-muted text-muted-foreground border-border",
+        sent: "border-transparent bg-info/10 text-info border-info/20",
+        delivered:
+          "border-transparent bg-primary/10 text-primary border-primary/20",
+        failed:
+          "border-transparent bg-destructive/10 text-destructive border-destructive/20",
+        completed:
+          "border-transparent bg-success/10 text-success border-success/20",
+        scheduled:
+          "border-transparent bg-warning/10 text-warning border-warning/20",
+        sending:
+          "border-transparent bg-info/10 text-info border-info/20",
+        approved:
+          "border-transparent bg-success/10 text-success border-success/20",
+        rejected:
+          "border-transparent bg-destructive/10 text-destructive border-destructive/20",
+        inactive:
+          "border-transparent bg-muted text-muted-foreground border-border",
+        blocked:
+          "border-transparent bg-destructive/10 text-destructive border-destructive/20",
+        paid:
+          "border-transparent bg-success/10 text-success border-success/20",
       },
     },
     defaultVariants: {
       variant: "default",
     },
-  },
+  }
 );
 
-export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {}
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, ...props }: BadgeProps) {
-  return <div className={cn(badgeVariants({ variant }), className)} {...props} />;
+  return (
+    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+  );
 }
 
 export { Badge, badgeVariants };
