@@ -5,6 +5,7 @@ import {
   FileText,
   Users,
   Send,
+  ClipboardList,
   MessageSquare,
   CreditCard,
   Settings,
@@ -21,6 +22,7 @@ const navigation = [
   { name: "Templates", href: "/templates", icon: FileText },
   { name: "Contacts", href: "/contacts", icon: Users },
   { name: "Campaigns", href: "/campaigns", icon: Send },
+  { name: "Follow-ups", href: "/follow-ups", icon: ClipboardList },
   { name: "Inbox", href: "/inbox", icon: MessageSquare },
   { name: "Billing", href: "/billing", icon: CreditCard },
   { name: "Settings", href: "/settings", icon: Settings },
@@ -54,7 +56,10 @@ export function AppSidebar() {
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto scrollbar-thin">
         {navigation.map((item) => {
-          const isActive = location.pathname === item.href;
+          const isActive =
+            item.href === "/"
+              ? location.pathname === "/"
+              : location.pathname.startsWith(item.href);
           return (
             <NavLink
               key={item.name}
