@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Templates from "./pages/Templates";
+import TemplateBuilder from "./pages/TemplateBuilder";
 import Contacts from "./pages/Contacts";
 import Campaigns from "./pages/Campaigns";
 import FollowUps from "./pages/FollowUps";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/templates" element={<Templates />} />
+            <Route path="/templates/create" element={<TemplateBuilder />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/campaigns" element={<Campaigns />} />
             <Route path="/follow-ups" element={<FollowUps />} />
