@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Templates from "./pages/Templates";
 import Contacts from "./pages/Contacts";
 import Campaigns from "./pages/Campaigns";
+import FollowUps from "./pages/FollowUps";
 import Inbox from "./pages/Inbox";
 import Billing from "./pages/Billing";
 import Settings from "./pages/Settings";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/templates" element={<Templates />} />
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/campaigns" element={<Campaigns />} />
+            <Route path="/follow-ups" element={<FollowUps />} />
             <Route path="/inbox" element={<Inbox />} />
             <Route path="/billing" element={<Billing />} />
             <Route path="/settings" element={<Settings />} />
