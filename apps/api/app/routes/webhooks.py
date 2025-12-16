@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+import hashlib
+import hmac
 from typing import Dict
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 
 from ..settings import Settings, get_settings
 from ..status_store import STATUS_STORE
-from ..whatsapp import validate_webhook_payload
+from ..whatsapp import extract_webhook_events
 
 router = APIRouter(prefix="/webhooks", tags=["Webhooks"])
 
@@ -31,8 +33,24 @@ async def receive_webhook(
 ) -> Dict[str, int]:
     """Receive WhatsApp status notifications and store them in memory."""
 
+    body = await request.body()
+    if settings.whatsapp_app_secret:
+        signature = request.headers.get("x-hub-signature-256")
+        if not signature:
+            raise HTTPException(status_code=403, detail="Missing webhook signature.")
+        digest = hmac.new(
+            settings.whatsapp_app_secret.get_secret_value().encode(),
+            msg=body,
+            digestmod=hashlib.sha256,
+        ).hexdigest()
+        expected = f"sha256={digest}"
+        if not hmac.compare_digest(signature, expected):
+            raise HTTPException(status_code=403, detail="Invalid webhook signature.")
+
     payload = await request.json()
-    events = validate_webhook_payload(payload)
-    for event in events:
+    events = extract_webhook_events(payload)
+    for event in events["statuses"]:
         STATUS_STORE.upsert(event)
-    return {"received": len(events)}
+    for inbound in events["inbound"]:
+        STATUS_STORE.add_inbound(inbound)
+    return {"received": len(events["statuses"]) + len(events["inbound"])}
