@@ -71,3 +71,9 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Connect to the WhatsApp backend
+
+- Start the FastAPI service from `apps/api` (see its README for environment variables).
+- Create a `.env` file in `apps/web` with `VITE_API_URL=http://localhost:8000` (or your deployed API URL).
+- The Inbox page now uses the backend to send WhatsApp messages and poll delivery status, so ensure the API is reachable from the browser.

@@ -1,11 +1,23 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ChatBubble } from "@/components/chat/ChatBubble";
 import { ContactListItem } from "@/components/chat/ContactListItem";
-import { Search, Send, Paperclip, Smile, MoreVertical, Phone, Video } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Search,
+  Send,
+  Paperclip,
+  Smile,
+  MoreVertical,
+  Phone,
+  Video,
+  Loader2,
+} from "lucide-react";
+import { apiBaseUrl, getMessageStatus, sendWhatsAppMessage } from "@/lib/api";
 
 const conversations = [
   {
@@ -93,6 +105,58 @@ const messages = [
 export default function Inbox() {
   const [activeConversation, setActiveConversation] = useState(1);
   const [messageInput, setMessageInput] = useState("");
+  const [recipient, setRecipient] = useState("+1 555 555 0100");
+  const [lastMessageId, setLastMessageId] = useState<string | null>(null);
+  const { toast } = useToast();
+
+  const sendMutation = useMutation({
+    mutationFn: async () => {
+      const trimmed = messageInput.trim();
+      if (!trimmed) {
+        throw new Error("Type a message to send.");
+      }
+
+      return sendWhatsAppMessage({
+        to: recipient.replace(/\D/g, ""),
+        type: "text",
+        text: trimmed,
+      });
+    },
+    onSuccess: (data) => {
+      const messageId = data.messages?.[0]?.id ?? null;
+      setLastMessageId(messageId);
+      setMessageInput("");
+      toast({
+        title: "Message sent to WhatsApp",
+        description: messageId
+          ? `Tracking delivery status for ${messageId}`
+          : "Message accepted by backend",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to send message",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const statusQuery = useQuery({
+    queryKey: ["message-status", lastMessageId],
+    queryFn: () => getMessageStatus(lastMessageId as string),
+    enabled: Boolean(lastMessageId),
+    refetchInterval: 4000,
+  });
+
+  const latestStatus = useMemo(() => {
+    if (!statusQuery.data?.latest) return null;
+    return statusQuery.data.latest as { status?: string; timestamp?: string };
+  }, [statusQuery.data]);
+
+  const handleSend = () => {
+    sendMutation.mutate();
+  };
 
   return (
     <DashboardLayout title="Inbox" subtitle="Manage customer conversations">
@@ -162,27 +226,72 @@ export default function Inbox() {
                 sender={msg.sender}
               />
             ))}
+            {lastMessageId && (
+              <div className="rounded-lg border border-border/60 bg-muted/40 p-3 space-y-1 text-sm">
+                <div className="flex items-center justify-between">
+                  <p className="font-semibold">Delivery status</p>
+                  <span className="text-xs text-muted-foreground">{lastMessageId}</span>
+                </div>
+                {statusQuery.isFetching ? (
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Checking delivery updates...
+                  </div>
+                ) : statusQuery.isError ? (
+                  <p className="text-destructive text-sm">Unable to fetch status from backend.</p>
+                ) : (
+                  <p className="text-sm">
+                    Latest status: {latestStatus?.status ?? "waiting for webhook callbacks"}
+                  </p>
+                )}
+              </div>
+            )}
           </CardContent>
 
           {/* Message Input */}
-          <div className="border-t border-border p-4">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon">
-                <Paperclip className="h-5 w-5" />
-              </Button>
+          <div className="border-t border-border p-4 space-y-3">
+            <div className="grid gap-2 sm:grid-cols-3 items-center">
               <Input
-                placeholder="Type a message..."
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                className="flex-1"
+                placeholder="WhatsApp number (e.g., 15551234567)"
+                value={recipient}
+                onChange={(e) => setRecipient(e.target.value)}
               />
-              <Button variant="ghost" size="icon">
-                <Smile className="h-5 w-5" />
-              </Button>
-              <Button size="icon" className="rounded-full">
-                <Send className="h-5 w-5" />
-              </Button>
+              <div className="sm:col-span-2 flex items-center gap-2">
+                <Button variant="ghost" size="icon">
+                  <Paperclip className="h-5 w-5" />
+                </Button>
+                <Input
+                  placeholder="Type a message to send via backend..."
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  className="flex-1"
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      handleSend();
+                    }
+                  }}
+                />
+                <Button variant="ghost" size="icon">
+                  <Smile className="h-5 w-5" />
+                </Button>
+                <Button
+                  size="icon"
+                  className="rounded-full"
+                  onClick={handleSend}
+                  disabled={sendMutation.isLoading}
+                >
+                  {sendMutation.isLoading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Send className="h-5 w-5" />
+                  )}
+                </Button>
+              </div>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Connected to backend at <span className="font-medium text-foreground">{apiBaseUrl}</span>.
+              Delivery receipts update automatically when webhook callbacks arrive.
+            </p>
           </div>
         </Card>
       </div>
