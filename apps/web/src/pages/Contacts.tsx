@@ -26,6 +26,7 @@ import {
   UserPlus,
   FilePlus,
 } from "lucide-react";
+import { sampleContacts } from "@/lib/sampleData";
 
 interface Contact {
   id: number;
@@ -36,55 +37,24 @@ interface Contact {
   tags: string[];
   lastContact: string;
   notes?: string;
+  timezone?: string;
+  preferences?: string[];
+  accountValue?: string;
 }
 
-const initialContacts: Contact[] = [
-  {
-    id: 1,
-    name: "Sarah Johnson",
-    phone: "+1 234 567 8901",
-    email: "sarah@example.com",
-    status: "active",
-    tags: ["VIP", "Customer"],
-    lastContact: "2024-01-15",
-  },
-  {
-    id: 2,
-    name: "Michael Chen",
-    phone: "+1 234 567 8902",
-    email: "michael@example.com",
-    status: "active",
-    tags: ["Lead"],
-    lastContact: "2024-01-14",
-  },
-  {
-    id: 3,
-    name: "Emily Davis",
-    phone: "+1 234 567 8903",
-    email: "emily@example.com",
-    status: "inactive",
-    tags: ["Customer"],
-    lastContact: "2024-01-10",
-  },
-  {
-    id: 4,
-    name: "James Wilson",
-    phone: "+1 234 567 8904",
-    email: "james@example.com",
-    status: "active",
-    tags: ["VIP", "Partner"],
-    lastContact: "2024-01-13",
-  },
-  {
-    id: 5,
-    name: "Lisa Anderson",
-    phone: "+1 234 567 8905",
-    email: "lisa@example.com",
-    status: "blocked",
-    tags: [],
-    lastContact: "2024-01-05",
-  },
-];
+const initialContacts: Contact[] = sampleContacts.map((contact) => ({
+  id: contact.id,
+  name: contact.name,
+  phone: contact.phone,
+  email: contact.email,
+  status: contact.status,
+  tags: contact.tags,
+  lastContact: contact.lastContact,
+  notes: contact.accountValue,
+  timezone: contact.timezone,
+  preferences: contact.preferences,
+  accountValue: contact.accountValue,
+}));
 
 export default function Contacts() {
   const [contacts, setContacts] = useState<Contact[]>(initialContacts);

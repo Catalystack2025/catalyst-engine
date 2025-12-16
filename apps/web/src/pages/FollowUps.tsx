@@ -21,7 +21,10 @@ import {
   Plus,
   Clock3,
   Users,
+  Filter,
+  Tags,
 } from "lucide-react";
+import { sampleCampaigns, sampleContacts } from "@/lib/sampleData";
 
 interface FollowUp {
   id: number;
@@ -33,35 +36,25 @@ interface FollowUp {
   priority: "low" | "medium" | "high";
 }
 
-const campaigns = [
-  { id: 1, name: "Summer Sale 2024" },
-  { id: 2, name: "New Product Launch" },
-  { id: 3, name: "Weekly Newsletter" },
-];
-
-const contacts = [
-  { id: 1, name: "Sarah Johnson" },
-  { id: 2, name: "Michael Chen" },
-  { id: 3, name: "Emily Davis" },
-  { id: 4, name: "James Wilson" },
-];
+const campaigns = sampleCampaigns.map((campaign) => ({ id: campaign.id, name: campaign.name }));
+const contacts = sampleContacts.map((contact) => ({ id: contact.id, name: contact.name }));
 
 const initialFollowUps: FollowUp[] = [
   {
     id: 1,
     campaignId: 1,
-    contactId: 2,
-    notes: "Send personalized coupon and check delivery confirmation.",
+    contactId: 1,
+    notes: "Share home-charger installation photos and confirm Tiago.ev drive slot.",
     dueAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
     status: "scheduled",
     priority: "high",
   },
   {
     id: 2,
-    campaignId: 3,
-    contactId: 1,
-    notes: "Confirm they received the newsletter and ask for feedback.",
-    dueAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+    campaignId: 4,
+    contactId: 3,
+    notes: "Collect VIN list from fleet contact and share recall slot availability.",
+    dueAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString().slice(0, 16),
     status: "overdue",
     priority: "medium",
   },
@@ -79,6 +72,13 @@ export default function FollowUps() {
   const [statusFilter, setStatusFilter] = useState<FollowUp["status"] | "all">(
     "all"
   );
+  const [contactSearch, setContactSearch] = useState("");
+  const [contactTagFilter, setContactTagFilter] = useState("all");
+
+  const selectedContact = useMemo(
+    () => sampleContacts.find((contact) => contact.id === Number(formState.contactId)),
+    [formState.contactId]
+  );
 
   const stats = useMemo(() => {
     const scheduled = followUps.filter((f) => f.status === "scheduled").length;
@@ -94,6 +94,16 @@ export default function FollowUps() {
       ),
     [followUps, statusFilter]
   );
+
+  const filteredContacts = useMemo(() => {
+    return sampleContacts.filter((contact) => {
+      const matchesSearch = `${contact.name} ${contact.email} ${contact.phone}`
+        .toLowerCase()
+        .includes(contactSearch.toLowerCase());
+      const matchesTag = contactTagFilter === "all" || contact.tags.includes(contactTagFilter);
+      return matchesSearch && matchesTag;
+    });
+  }, [contactSearch, contactTagFilter]);
 
   const addFollowUp = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -167,7 +177,7 @@ export default function FollowUps() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 mb-8">
         <Card variant="elevated" className="xl:col-span-2 animate-slide-up">
           <CardHeader>
             <CardTitle>Create follow-up</CardTitle>
@@ -271,7 +281,11 @@ export default function FollowUps() {
           </CardContent>
         </Card>
 
-        <Card variant="elevated" className="animate-slide-up" style={{ animationDelay: "50ms" }}>
+        <Card
+          variant="elevated"
+          className="animate-slide-up"
+          style={{ animationDelay: "50ms" }}
+        >
           <CardHeader>
             <CardTitle>Filters</CardTitle>
           </CardHeader>
@@ -294,6 +308,81 @@ export default function FollowUps() {
                 <SelectItem value="done">Completed</SelectItem>
               </SelectContent>
             </Select>
+          </CardContent>
+        </Card>
+
+        <Card
+          variant="elevated"
+          className="animate-slide-up xl:col-span-1"
+          style={{ animationDelay: "100ms" }}
+        >
+          <CardHeader>
+            <CardTitle>Pick a contact</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Search contacts by name"
+                value={contactSearch}
+                onChange={(event) => setContactSearch(event.target.value)}
+              />
+              <Filter className="h-4 w-4 text-muted-foreground" />
+            </div>
+            <Select value={contactTagFilter} onValueChange={setContactTagFilter}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by tag" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All segments</SelectItem>
+                <SelectItem value="EV lead">EV lead</SelectItem>
+                <SelectItem value="Fleet">Fleet</SelectItem>
+                <SelectItem value="Dealer">Dealer</SelectItem>
+                <SelectItem value="Recall">Recall</SelectItem>
+                <SelectItem value="Press">Press</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="space-y-3 max-h-64 overflow-y-auto pr-1 scrollbar-thin">
+              {filteredContacts.map((contact) => (
+                <div
+                  key={contact.id}
+                  className={`rounded-lg border p-3 space-y-2 ${
+                    contact.id === Number(formState.contactId)
+                      ? "border-primary bg-primary/5"
+                      : "border-border"
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">{contact.name}</p>
+                      <p className="text-xs text-muted-foreground">{contact.email}</p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => setFormState((prev) => ({ ...prev, contactId: String(contact.id) }))}>
+                      Select
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                    {contact.tags.map((tag) => (
+                      <Badge key={`${contact.id}-${tag}`} variant="muted" className="gap-1">
+                        <Tags className="h-3 w-3" /> {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Last interaction: {contact.lastContact} • Prefers {contact.preferences?.[0] ?? ""}
+                  </p>
+                </div>
+              ))}
+            </div>
+            {selectedContact && (
+              <div className="rounded-lg bg-muted/50 border border-dashed p-3 space-y-1 text-xs text-muted-foreground">
+                <p className="font-medium text-foreground">Currently assigned</p>
+                <p>{selectedContact.name}</p>
+                <p>
+                  {selectedContact.phone} • {selectedContact.timezone}
+                </p>
+                <p>Value: {selectedContact.accountValue}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

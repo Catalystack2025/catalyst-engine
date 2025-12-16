@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   MessageCircle,
+  GitBranch,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ const navigation = [
   { name: "Templates", href: "/templates", icon: FileText },
   { name: "Contacts", href: "/contacts", icon: Users },
   { name: "Campaigns", href: "/campaigns", icon: Send },
+  { name: "Automation", href: "/automation", icon: GitBranch },
   { name: "Follow-ups", href: "/follow-ups", icon: ClipboardList },
   { name: "Inbox", href: "/inbox", icon: MessageSquare },
   { name: "Billing", href: "/billing", icon: CreditCard },

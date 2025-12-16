@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ChatBubble } from "@/components/chat/ChatBubble";
 import { ContactListItem } from "@/components/chat/ContactListItem";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -102,6 +104,12 @@ const messages = [
   },
 ];
 
+const quickReplies = [
+  "Thanks for staying with us—here's the update you asked for!",
+  "I can send you a catalog now. Do you prefer PDF or a quick video?",
+  "Noted! I will get back to you within the next hour with the details.",
+];
+
 export default function Inbox() {
   const [activeConversation, setActiveConversation] = useState(1);
   const [messageInput, setMessageInput] = useState("");
@@ -186,8 +194,8 @@ export default function Inbox() {
           </CardContent>
         </Card>
 
-        {/* Chat Window */}
-        <Card variant="elevated" className="flex-1 flex flex-col animate-slide-up" style={{ animationDelay: "100ms" }}>
+          {/* Chat Window */}
+          <Card variant="elevated" className="flex-1 flex flex-col animate-slide-up" style={{ animationDelay: "100ms" }}>
           {/* Chat Header */}
           <CardHeader className="border-b border-border pb-4">
             <div className="flex items-center justify-between">
@@ -226,6 +234,25 @@ export default function Inbox() {
                 sender={msg.sender}
               />
             ))}
+            <div className="rounded-lg border border-border/60 bg-muted/40 p-3 space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <p className="font-semibold">Suggested replies</p>
+                <span className="text-xs text-muted-foreground">Improve your message section</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {quickReplies.map((reply, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setMessageInput(reply)}
+                    className="text-left"
+                  >
+                    {reply}
+                  </Button>
+                ))}
+              </div>
+            </div>
             {lastMessageId && (
               <div className="rounded-lg border border-border/60 bg-muted/40 p-3 space-y-1 text-sm">
                 <div className="flex items-center justify-between">
@@ -293,6 +320,38 @@ export default function Inbox() {
               Delivery receipts update automatically when webhook callbacks arrive.
             </p>
           </div>
+        </Card>
+
+        <Card variant="elevated" className="w-80 flex-shrink-0 flex flex-col animate-slide-up" style={{ animationDelay: "200ms" }}>
+          <CardHeader>
+            <CardTitle>Conversation assistant</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm">
+            <div className="rounded-lg border bg-muted/30 p-3 space-y-1">
+              <p className="text-xs text-muted-foreground">Tone guidance</p>
+              <p className="font-medium text-foreground">Friendly & concise</p>
+              <p className="text-xs text-muted-foreground">Keeps replies short while sounding helpful.</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground">Template suggestions</p>
+              <div className="flex flex-col gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/templates">Insert "Order Ready" template</Link>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/automation">Add to automation flow</Link>
+                </Button>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Health indicators</p>
+              <div className="flex flex-wrap gap-2">
+                <Badge variant="success">Response in &lt;5m</Badge>
+                <Badge variant="outline">Personalized</Badge>
+                <Badge variant="warning">Follow-up due</Badge>
+              </div>
+            </div>
+          </CardContent>
         </Card>
       </div>
     </DashboardLayout>

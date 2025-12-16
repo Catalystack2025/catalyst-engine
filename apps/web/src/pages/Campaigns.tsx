@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
+import type { BadgeProps } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -26,104 +28,11 @@ import {
   PauseCircle,
   CalendarDays,
   Users,
+  GitBranch,
 } from "lucide-react";
+import { CampaignRecord, CampaignStatus, sampleCampaigns } from "@/lib/sampleData";
 
-interface Campaign {
-  id: number;
-  name: string;
-  audience: string;
-  status: "draft" | "scheduled" | "active" | "completed" | "failed" | "paused";
-  sent: number;
-  delivered: number;
-  read: number;
-  replied: number;
-  progress: number;
-  scheduledAt: string | null;
-  message: string;
-}
-
-const initialCampaigns: Campaign[] = [
-  {
-    id: 1,
-    name: "Summer Sale 2024",
-    audience: "VIP customers",
-    status: "active",
-    sent: 12500,
-    delivered: 12234,
-    read: 8945,
-    replied: 234,
-    progress: 98,
-    scheduledAt: "2024-01-15T10:00",
-    message: "Don't miss our mid-season offers ending soon!",
-  },
-  {
-    id: 2,
-    name: "New Product Launch",
-    audience: "All subscribers",
-    status: "completed",
-    sent: 8500,
-    delivered: 8320,
-    read: 6120,
-    replied: 456,
-    progress: 100,
-    scheduledAt: "2024-01-14T14:00",
-    message: "Introducing our latest release with exclusive pricing.",
-  },
-  {
-    id: 3,
-    name: "Weekly Newsletter",
-    audience: "Newsletter list",
-    status: "paused",
-    sent: 7500,
-    delivered: 7200,
-    read: 4300,
-    replied: 120,
-    progress: 50,
-    scheduledAt: "2024-01-16T09:00",
-    message: "Your curated updates for the week ahead.",
-  },
-  {
-    id: 4,
-    name: "Customer Feedback",
-    audience: "Recent purchasers",
-    status: "scheduled",
-    sent: 0,
-    delivered: 0,
-    read: 0,
-    replied: 0,
-    progress: 0,
-    scheduledAt: "2024-01-20T11:00",
-    message: "Tell us how we did and claim a reward!",
-  },
-  {
-    id: 5,
-    name: "Holiday Greetings",
-    audience: "All customers",
-    status: "draft",
-    sent: 0,
-    delivered: 0,
-    read: 0,
-    replied: 0,
-    progress: 0,
-    scheduledAt: null,
-    message: "Warm wishes and thank you for being with us.",
-  },
-  {
-    id: 6,
-    name: "Failed Campaign Test",
-    audience: "QA cohort",
-    status: "failed",
-    sent: 5000,
-    delivered: 2500,
-    read: 1000,
-    replied: 50,
-    progress: 50,
-    scheduledAt: "2024-01-10T08:00",
-    message: "Testing deliverability after infra changes.",
-  },
-];
-
-const getStatusIcon = (status: Campaign["status"]) => {
+const getStatusIcon = (status: CampaignStatus) => {
   switch (status) {
     case "active":
       return <Send className="h-4 w-4 text-primary animate-pulse" />;
@@ -140,10 +49,12 @@ const getStatusIcon = (status: Campaign["status"]) => {
   }
 };
 
+const statusToBadgeVariant = (status: CampaignStatus): BadgeProps["variant"] => status;
+
 export default function Campaigns() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(initialCampaigns);
+  const [campaigns, setCampaigns] = useState<CampaignRecord[]>(sampleCampaigns);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<Campaign["status"] | "all">(
+  const [statusFilter, setStatusFilter] = useState<CampaignStatus | "all">(
     "all"
   );
   const [formState, setFormState] = useState({
@@ -159,8 +70,7 @@ export default function Campaigns() {
         const matchesSearch = campaign.name
           .toLowerCase()
           .includes(search.toLowerCase());
-        const matchesStatus =
-          statusFilter === "all" || campaign.status === statusFilter;
+        const matchesStatus = statusFilter === "all" || campaign.status === statusFilter;
         return matchesSearch && matchesStatus;
       }),
     [campaigns, search, statusFilter]
@@ -177,7 +87,7 @@ export default function Campaigns() {
     event.preventDefault();
     if (!formState.name.trim()) return;
 
-    const newCampaign: Campaign = {
+    const newCampaign: CampaignRecord = {
       id: Date.now(),
       name: formState.name,
       audience: formState.audience || "All contacts",
@@ -195,7 +105,7 @@ export default function Campaigns() {
     setFormState({ name: "", audience: "", scheduledAt: "", message: "" });
   };
 
-  const updateStatus = (id: number, status: Campaign["status"]) => {
+  const updateStatus = (id: number, status: CampaignStatus) => {
     setCampaigns((prev) =>
       prev.map((campaign) =>
         campaign.id === id
@@ -245,6 +155,56 @@ export default function Campaigns() {
       title="Campaigns"
       subtitle="Create, schedule, and monitor your campaigns"
     >
+      <Card variant="elevated" className="mb-6 animate-slide-up">
+        <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1">
+            <CardTitle>Campaign timeline</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Quickly scan each campaign title, then jump into a focused detail screen.
+            </p>
+          </div>
+          <Button variant="outline" className="gap-2" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+            <GitBranch className="h-4 w-4" />
+            View flow
+          </Button>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ol className="relative border-s border-border/70">
+            {campaigns.map((campaign, index) => (
+              <li key={campaign.id} className="ms-4 pb-6 last:pb-0">
+                <span className="absolute -start-[10px] flex h-5 w-5 items-center justify-center rounded-full bg-background ring-4 ring-background">
+                  <span className="h-2.5 w-2.5 rounded-full bg-primary" />
+                </span>
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-foreground">{campaign.name}</p>
+                      <Badge variant={statusToBadgeVariant(campaign.status)}>
+                        {campaign.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {campaign.scheduledAt
+                        ? `Scheduled ${new Date(campaign.scheduledAt).toLocaleString()}`
+                        : "Draft timeline awaiting schedule"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {campaign.audience}
+                    </Badge>
+                    <Button size="sm" variant="outline" className="gap-2" asChild>
+                      <Link to={`/campaigns/${campaign.id}`}>View campaign</Link>
+                    </Button>
+                  </div>
+                </div>
+                {index < campaigns.length - 1 && <div className="mt-4 h-px bg-border/60" />}
+              </li>
+            ))}
+          </ol>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <Card variant="stat" className="animate-slide-up">
           <CardContent className="p-4 flex items-center gap-3">
@@ -367,7 +327,7 @@ export default function Campaigns() {
               <Label>Status</Label>
               <Select
                 value={statusFilter}
-                onValueChange={(value) => setStatusFilter(value as Campaign["status"] | "all")}
+                onValueChange={(value) => setStatusFilter(value as CampaignStatus | "all")}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="All statuses" />
@@ -409,7 +369,9 @@ export default function Campaigns() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-foreground">{campaign.name}</h3>
                       {getStatusIcon(campaign.status)}
-                      <Badge variant={campaign.status as any}>{campaign.status}</Badge>
+                    <Badge variant={statusToBadgeVariant(campaign.status)}>
+                      {campaign.status}
+                    </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mt-1">
                       Audience: {campaign.audience}
@@ -459,10 +421,10 @@ export default function Campaigns() {
                     <PlayCircle className="h-4 w-4" />
                     Advance
                   </Button>
-                  {campaign.status !== "draft" && (
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <BarChart3 className="h-4 w-4" />
-                      Report
+                    {campaign.status !== "draft" && (
+                      <Button variant="outline" size="sm" className="gap-2">
+                        <BarChart3 className="h-4 w-4" />
+                        Report
                     </Button>
                   )}
                   <Button

@@ -15,29 +15,29 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-6">
         <StatCard
           title="Messages Sent"
-          value="45,231"
-          change="+20.1% from last month"
+          value="47,730"
+          change="Sum across launch, EV, service, and recall journeys"
           changeType="positive"
           icon={Send}
         />
         <StatCard
           title="Total Contacts"
-          value="12,847"
-          change="+180 this week"
-          changeType="positive"
+          value="5"
+          change="EV leads, fleet partners, and dealer managers"
+          changeType="neutral"
           icon={Users}
         />
         <StatCard
           title="Active Campaigns"
-          value="8"
-          change="3 scheduled"
-          changeType="neutral"
+          value="3"
+          change="Active, paused, and scheduled recall flows"
+          changeType="positive"
           icon={MessageSquare}
         />
         <StatCard
           title="Delivery Rate"
-          value="98.2%"
-          change="+0.5% from last week"
+          value="91.6%"
+          change="Across EV and launch audiences"
           changeType="positive"
           icon={CheckCircle}
         />
