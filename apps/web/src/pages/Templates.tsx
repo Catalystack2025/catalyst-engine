@@ -30,83 +30,9 @@ import {
   Copy,
   Eye,
   Pencil,
+  Sparkle,
 } from "lucide-react";
-
-type TemplateStatus = "approved" | "draft" | "pending" | "rejected";
-
-interface Template {
-  id: number;
-  name: string;
-  category: string;
-  language: string;
-  status: TemplateStatus;
-  lastUpdated: string;
-  bodyPreview: string;
-  usage: string;
-}
-
-const templates: Template[] = [
-  {
-    id: 1,
-    name: "Welcome Aboard",
-    category: "Marketing",
-    language: "English",
-    status: "approved",
-    lastUpdated: "2024-02-04",
-    bodyPreview: "Hi {{1}}, welcome to Greenwave! Tap below to set preferences.",
-    usage: "High engagement", 
-  },
-  {
-    id: 2,
-    name: "Order Ready",
-    category: "Utility",
-    language: "English",
-    status: "approved",
-    lastUpdated: "2024-02-02",
-    bodyPreview: "Hi {{1}}, your order {{2}} is ready for pickup at {{3}}.",
-    usage: "Sent 12.4K times",
-  },
-  {
-    id: 3,
-    name: "Payment Reminder",
-    category: "Alert",
-    language: "Spanish",
-    status: "pending",
-    lastUpdated: "2024-01-30",
-    bodyPreview: "Hola {{1}}, tu pago vence el {{2}}. Usa el enlace para pagar.",
-    usage: "In review",
-  },
-  {
-    id: 4,
-    name: "NPS Feedback",
-    category: "Marketing",
-    language: "English",
-    status: "draft",
-    lastUpdated: "2024-01-28",
-    bodyPreview: "Hi {{1}}, quick favor: rate us from 1-5 so we can improve.",
-    usage: "Draft",
-  },
-  {
-    id: 5,
-    name: "Login Code",
-    category: "Authentication",
-    language: "French",
-    status: "approved",
-    lastUpdated: "2024-01-24",
-    bodyPreview: "Bonjour {{1}}, votre code de connexion est {{2}}.",
-    usage: "99% delivery",
-  },
-  {
-    id: 6,
-    name: "Upsell Bundle",
-    category: "Marketing",
-    language: "English",
-    status: "rejected",
-    lastUpdated: "2024-01-20",
-    bodyPreview: "Hi {{1}}, unlock 15% off when you add this bundle to your order.",
-    usage: "Needs edits",
-  },
-];
+import { sampleTemplates, TemplateRecord, TemplateStatus } from "@/lib/sampleData";
 
 const getStatusIcon = (status: TemplateStatus) => {
   switch (status) {
@@ -122,20 +48,23 @@ const getStatusIcon = (status: TemplateStatus) => {
 };
 
 export default function Templates() {
+  const [selectedTemplateId, setSelectedTemplateId] = useState<number>(
+    sampleTemplates[0]?.id ?? 1
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<TemplateStatus | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [languageFilter, setLanguageFilter] = useState("all");
 
   const stats = useMemo(() => {
-    const total = templates.length;
-    const approved = templates.filter((template) => template.status === "approved").length;
-    const drafts = templates.filter((template) => template.status === "draft").length;
+    const total = sampleTemplates.length;
+    const approved = sampleTemplates.filter((template) => template.status === "approved").length;
+    const drafts = sampleTemplates.filter((template) => template.status === "draft").length;
     return { total, approved, drafts };
   }, []);
 
   const filteredTemplates = useMemo(() => {
-    return templates.filter((template) => {
+    return sampleTemplates.filter((template) => {
       const matchesSearch = `${template.name} ${template.category}`
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
@@ -147,6 +76,11 @@ export default function Templates() {
       return matchesSearch && matchesStatus && matchesCategory && matchesLanguage;
     });
   }, [searchTerm, statusFilter, categoryFilter, languageFilter]);
+
+  const selectedTemplate = useMemo<TemplateRecord | undefined>(
+    () => sampleTemplates.find((template) => template.id === selectedTemplateId),
+    [selectedTemplateId]
+  );
 
   return (
     <DashboardLayout
@@ -237,15 +171,74 @@ export default function Templates() {
         </CardHeader>
       </Card>
 
+      {selectedTemplate && (
+        <Card variant="elevated" className="mb-6 animate-slide-up" style={{ animationDelay: "40ms" }}>
+          <CardHeader className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                <CardTitle className="text-lg">{selectedTemplate.name}</CardTitle>
+                <Badge variant={selectedTemplate.status} className="capitalize">
+                  {selectedTemplate.status}
+                </Badge>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {selectedTemplate.category} • {selectedTemplate.language} • Updated {selectedTemplate.lastUpdated}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" className="gap-2" asChild>
+                <Link to="/automation">
+                  <Sparkle className="h-4 w-4" /> Use in automation
+                </Link>
+              </Button>
+              <Button variant="secondary" className="gap-2">
+                <Eye className="h-4 w-4" /> Preview template
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-2 space-y-3">
+              <p className="text-sm text-muted-foreground">Message body preview</p>
+              <div className="rounded-lg border border-dashed bg-muted/50 p-4 text-sm text-foreground shadow-inner">
+                {selectedTemplate.bodyPreview}
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <Badge variant="outline">Channel: {selectedTemplate.channel ?? "WhatsApp"}</Badge>
+                <Badge variant="outline">Usage: {selectedTemplate.usage}</Badge>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <p className="text-sm font-medium">Review timeline</p>
+              <ol className="relative ms-4 space-y-4 border-s border-border/70">
+                {["Drafted", "Submitted", "Reviewed", "Approved"].map((step, index) => (
+                  <li key={step} className="relative ps-3">
+                    <span className="absolute -start-[10px] h-2.5 w-2.5 rounded-full bg-primary" />
+                    <div className="flex items-center justify-between text-sm">
+                      <span>{step}</span>
+                      <Badge variant="muted">{index === 0 ? selectedTemplate.lastUpdated : "Pending"}</Badge>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filteredTemplates.map((template, index) => {
           const canEdit = template.status === "draft" || template.status === "rejected";
+          const isActive = template.id === selectedTemplateId;
           return (
             <Card
               key={template.id}
               variant="elevated"
-              className="animate-slide-up"
+              className={`cursor-pointer transition-all animate-slide-up ${
+                isActive ? "ring-2 ring-primary" : "hover:border-primary/50"
+              }`}
               style={{ animationDelay: `${index * 40}ms` }}
+              onClick={() => setSelectedTemplateId(template.id)}
             >
               <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
                 <div className="space-y-1">
@@ -268,7 +261,7 @@ export default function Templates() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-44">
-                    <DropdownMenuItem className="gap-2">
+                    <DropdownMenuItem className="gap-2" onClick={() => setSelectedTemplateId(template.id)}>
                       <Eye className="h-4 w-4" /> View
                     </DropdownMenuItem>
                     {canEdit && (
