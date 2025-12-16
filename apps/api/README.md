@@ -9,9 +9,11 @@ receiving webhook callbacks from the WhatsApp Business Platform.
 Set the following environment variables (e.g., in `.env`) before running the API:
 
 - `WHATSAPP_API_VERSION` (default `v19.0`)
-- `WHATSAPP_PHONE_NUMBER_ID` (required)
-- `WHATSAPP_ACCESS_TOKEN` (required)
+- `WHATSAPP_PHONE_NUMBER_ID` **or** `WHATSAPP_SANDBOX_PHONE_NUMBER_ID`
+- `WHATSAPP_ACCESS_TOKEN` **or** `WHATSAPP_SANDBOX_ACCESS_TOKEN`
+- `WHATSAPP_SANDBOX_TEST_NUMBER` (optional helper for local testing)
 - `WHATSAPP_VERIFY_TOKEN` (used for webhook verification, default `dev-verify-token`)
+- `WHATSAPP_APP_SECRET` (optional; enables webhook signature validation)
 - `WEBHOOK_BASE_URL` (optional, useful documentation for the frontend)
 
 Start the API with `uvicorn app.main:app --reload` from the `apps/api` directory.

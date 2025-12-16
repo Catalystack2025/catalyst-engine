@@ -5,7 +5,7 @@ from typing import Dict, Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
 from ..settings import Settings, get_settings
-from ..status_store import STATUS_STORE
+from ..status_store import RATE_LIMITER, STATUS_STORE
 from ..whatsapp import WhatsAppClient, WhatsAppMessage
 
 router = APIRouter(prefix="/whatsapp", tags=["WhatsApp"])
@@ -21,11 +21,15 @@ async def send_whatsapp_message(
 ) -> Dict:
     """Send a text or multimedia WhatsApp message."""
 
+    fingerprint = f"{payload.to}:{payload.type}:{payload.text or payload.media_id or payload.media_link}"
+    if not RATE_LIMITER.check(payload.to, fingerprint):
+        raise HTTPException(status_code=429, detail="Duplicate send detected")
+
     response = await client.send_message(payload)
     message_id = response.get("messages", [{}])[0].get("id")
     if message_id:
         STATUS_STORE.upsert({"id": message_id, "status": "sent", "recipient_id": payload.to})
-    return response
+    return {"message_id": message_id, "raw": response}
 
 
 @router.get("/messages/{message_id}/status")

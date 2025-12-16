@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Literal, Optional
+from typing import Any, Dict, List, Literal, Optional, Tuple
 
 import httpx
 from fastapi import HTTPException
@@ -70,25 +70,43 @@ class WhatsAppClient:
     """Small wrapper around the WhatsApp Business Platform endpoints."""
 
     def __init__(self, settings: Settings):
-        if not settings.whatsapp_access_token:
+        self.settings = settings
+        token, phone_number_id = self._resolve_credentials()
+        if not token:
             raise HTTPException(
                 status_code=500, detail="WHATSAPP_ACCESS_TOKEN is not configured."
             )
-        if not settings.whatsapp_phone_number_id:
+        if not phone_number_id:
             raise HTTPException(
                 status_code=500, detail="WHATSAPP_PHONE_NUMBER_ID is not configured."
             )
-        self.settings = settings
+        self.phone_number_id = phone_number_id
         self._headers = {
-            "Authorization": f"Bearer {settings.whatsapp_access_token.get_secret_value()}",
+            "Authorization": f"Bearer {token}",
         }
+
+    def _resolve_credentials(self) -> Tuple[Optional[str], str]:
+        sandbox_token = (
+            self.settings.whatsapp_sandbox_access_token.get_secret_value()
+            if self.settings.whatsapp_sandbox_access_token
+            else None
+        )
+        sandbox_phone_id = self.settings.whatsapp_sandbox_phone_number_id
+        if sandbox_token and sandbox_phone_id:
+            return sandbox_token, sandbox_phone_id
+        if self.settings.whatsapp_access_token and self.settings.whatsapp_phone_number_id:
+            return (
+                self.settings.whatsapp_access_token.get_secret_value(),
+                self.settings.whatsapp_phone_number_id,
+            )
+        return None, ""
 
     @property
     def base_url(self) -> str:
         return f"https://graph.facebook.com/{self.settings.whatsapp_api_version}"
 
     async def send_message(self, message: WhatsAppMessage) -> Dict[str, Any]:
-        url = f"{self.base_url}/{self.settings.whatsapp_phone_number_id}/messages"
+        url = f"{self.base_url}/{self.phone_number_id}/messages"
         payload = message.to_whatsapp_payload()
         async with httpx.AsyncClient(timeout=20) as client:
             response = await client.post(url, json=payload, headers=self._headers)
@@ -133,15 +151,42 @@ def parse_webhook_status_events(payload: Dict[str, Any]) -> List[Dict[str, Any]]
     return events
 
 
-def validate_webhook_payload(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
-    """Validate webhook payloads and extract status events for persistence."""
+def extract_inbound_messages(payload: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Extract inbound text/media messages from webhook payloads."""
+
+    events: List[Dict[str, Any]] = []
+    for entry in payload.get("entry", []):
+        for change in entry.get("changes", []):
+            value = change.get("value", {})
+            contacts = value.get("contacts", [])
+            contact = contacts[0] if contacts else {}
+            for message in value.get("messages", []):
+                events.append(
+                    {
+                        "id": message.get("id"),
+                        "from": message.get("from"),
+                        "type": message.get("type"),
+                        "timestamp": message.get("timestamp"),
+                        "name": contact.get("profile", {}).get("name"),
+                        "text": (message.get("text", {}) or {}).get("body"),
+                        "media": message.get(message.get("type", ""), {}),
+                    }
+                )
+    return events
+
+
+def extract_webhook_events(payload: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
+    """Validate webhook payloads and extract status and inbound message events."""
 
     try:
-        events = parse_webhook_status_events(payload)
+        statuses = parse_webhook_status_events(payload)
+        inbound = extract_inbound_messages(payload)
     except Exception as exc:  # pragma: no cover - defensive for unexpected formats
         raise HTTPException(status_code=400, detail=str(exc))
 
-    if not events:
-        raise HTTPException(status_code=400, detail="No status events found in payload.")
+    if not statuses and not inbound:
+        raise HTTPException(
+            status_code=400, detail="No status or inbound events found in payload."
+        )
 
-    return events
+    return {"statuses": statuses, "inbound": inbound}
