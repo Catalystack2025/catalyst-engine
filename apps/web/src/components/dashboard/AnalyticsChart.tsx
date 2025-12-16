@@ -10,13 +10,13 @@ import {
 } from "recharts";
 
 const data = [
-  { name: "Mon", sent: 4000, delivered: 3800, read: 2400 },
-  { name: "Tue", sent: 3000, delivered: 2900, read: 1398 },
-  { name: "Wed", sent: 2000, delivered: 1980, read: 9800 },
-  { name: "Thu", sent: 2780, delivered: 2700, read: 3908 },
-  { name: "Fri", sent: 1890, delivered: 1850, read: 4800 },
-  { name: "Sat", sent: 2390, delivered: 2300, read: 3800 },
-  { name: "Sun", sent: 3490, delivered: 3400, read: 4300 },
+  { name: "Mon", sent: 5200, delivered: 4980, read: 3820 },
+  { name: "Tue", sent: 6100, delivered: 5900, read: 4300 },
+  { name: "Wed", sent: 4800, delivered: 4550, read: 3400 },
+  { name: "Thu", sent: 7200, delivered: 6950, read: 5120 },
+  { name: "Fri", sent: 6800, delivered: 6520, read: 4800 },
+  { name: "Sat", sent: 4300, delivered: 4100, read: 2980 },
+  { name: "Sun", sent: 3900, delivered: 3700, read: 2500 },
 ];
 
 export function AnalyticsChart() {

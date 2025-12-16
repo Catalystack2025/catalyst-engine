@@ -43,18 +43,18 @@ const initialFollowUps: FollowUp[] = [
   {
     id: 1,
     campaignId: 1,
-    contactId: 2,
-    notes: "Send personalized coupon and check delivery confirmation.",
+    contactId: 1,
+    notes: "Share home-charger installation photos and confirm Tiago.ev drive slot.",
     dueAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
     status: "scheduled",
     priority: "high",
   },
   {
     id: 2,
-    campaignId: 3,
-    contactId: 1,
-    notes: "Confirm they received the newsletter and ask for feedback.",
-    dueAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+    campaignId: 4,
+    contactId: 3,
+    notes: "Collect VIN list from fleet contact and share recall slot availability.",
+    dueAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString().slice(0, 16),
     status: "overdue",
     priority: "medium",
   },
@@ -334,10 +334,11 @@ export default function FollowUps() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All segments</SelectItem>
-                <SelectItem value="VIP">VIP</SelectItem>
-                <SelectItem value="Customer">Customer</SelectItem>
-                <SelectItem value="Lead">Lead</SelectItem>
-                <SelectItem value="Partner">Partner</SelectItem>
+                <SelectItem value="EV lead">EV lead</SelectItem>
+                <SelectItem value="Fleet">Fleet</SelectItem>
+                <SelectItem value="Dealer">Dealer</SelectItem>
+                <SelectItem value="Recall">Recall</SelectItem>
+                <SelectItem value="Press">Press</SelectItem>
               </SelectContent>
             </Select>
             <div className="space-y-3 max-h-64 overflow-y-auto pr-1 scrollbar-thin">

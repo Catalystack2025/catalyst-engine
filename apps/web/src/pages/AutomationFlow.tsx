@@ -34,10 +34,12 @@ interface Condition {
 export default function AutomationFlow() {
   const [selectedTemplateId, setSelectedTemplateId] = useState(sampleTemplates[0]?.id ?? 1);
   const [conditions, setConditions] = useState<Condition[]>([
-    { id: 1, field: "Tag", operator: "is", value: "VIP" },
-    { id: 2, field: "Last reply", operator: "greater than", value: "7 days" },
+    { id: 1, field: "Tag", operator: "is", value: "EV lead" },
+    { id: 2, field: "Last reply", operator: "greater than", value: "5 days" },
   ]);
-  const [message, setMessage] = useState("Send a thank-you note and an optional coupon if the customer has not replied.");
+  const [message, setMessage] = useState(
+    "Send Tiago.ev drive reminders with finance pre-check if the lead has been quiet for 5+ days."
+  );
   const selectedTemplate = useMemo(
     () => sampleTemplates.find((template) => template.id === selectedTemplateId),
     [selectedTemplateId]
